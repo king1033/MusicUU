@@ -11,7 +11,7 @@
 #####图片加载
 [picasso](https://github.com/square/picasso)  
 #####歌词显示
-[LrcView](https://github.com/WuLiFei/LyricViewDemo)非常赞
+[LrcView](https://github.com/WuLiFei/LyricViewDemo)
 
 ######2016.8.18
 * 移除掉了主页面的搜索按钮，太丑了，把搜索放在了搜索框右侧的搜索图标和软键盘上
@@ -30,4 +30,13 @@
 * 封装部分代码到BaseActivity
 * 去除一个崩溃bug
 
+######2016.9.19
+* 移除搜索界面右上角小三点，避免屏幕适配问题
+* 现在在搜索条目上向左滑动可显示下载，mv按钮
+* 修改部分提示
+
 ![image](https://raw.githubusercontent.com/Qrilee/MusicUU/master/screenshots/pic.png)
+
+捐赠：愿意支持开发的可以支持下哈
+![image](http://qtfreet.com/zfb.png) ![image](http://qtfreet.com/wx.png)
+

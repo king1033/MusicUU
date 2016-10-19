@@ -55,7 +55,12 @@ public class MvDetailAdatper extends RecyclerView.Adapter<MvDetailAdatper.VideoV
         } else {
             pic = recImg;
         }
-        Picasso.with(mContext).load(pic).into(holder.iv);
+        if (!pic.isEmpty()) {
+            Picasso.with(mContext).load(pic).into(holder.iv);
+        } else {
+        //    Picasso.with(mContext).load(R.mipmap.icon).fit().into(holder.iv);
+
+        }
         holder.des.setText(Info.getTitle());
 
     }

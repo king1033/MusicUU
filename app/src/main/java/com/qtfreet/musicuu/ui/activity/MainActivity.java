@@ -2,13 +2,9 @@ package com.qtfreet.musicuu.ui.activity;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,9 +12,15 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import com.iflytek.autoupdate.IFlytekUpdate;
+import com.iflytek.autoupdate.IFlytekUpdateListener;
+import com.iflytek.autoupdate.UpdateConstants;
+import com.iflytek.autoupdate.UpdateErrorCode;
+import com.iflytek.autoupdate.UpdateInfo;
+import com.iflytek.autoupdate.UpdateType;
+import com.iflytek.sunflower.FlowerCollector;
 import com.qtfreet.musicuu.R;
 import com.qtfreet.musicuu.model.Constant.Constants;
 import com.qtfreet.musicuu.ui.BaseActivity;
@@ -30,6 +32,7 @@ import com.zhy.m.permission.PermissionGrant;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import cn.pedant.SweetAlert.SweetAlertDialog;
 import me.curzbin.library.BottomDialog;
 import me.curzbin.library.Item;
 import me.curzbin.library.OnItemClickListener;
@@ -65,33 +68,60 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     private void firstUse() {
         boolean isFirst = (boolean) SPUtils.get(this, Constants.IS_FIRST_RUN, true);
         if (isFirst) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.start_info);
-
-            builder.setMessage(getString(R.string.description));
-            builder.setCancelable(false);
-            builder.setNegativeButton(R.string.i_know, new DialogInterface.OnClickListener() {
+            SweetAlertDialog sweetAlertDialog = new SweetAlertDialog(this);
+            sweetAlertDialog.setTitleText(getString(R.string.start_info));
+            sweetAlertDialog.setContentText(getString(R.string.description)).setConfirmText(getString(R.string.i_know));
+            sweetAlertDialog.setCancelable(false);
+            sweetAlertDialog.setConfirmClickListener(new SweetAlertDialog.OnSweetClickListener() {
                 @Override
-                public void onClick(DialogInterface dialog, int which) {
+                public void onClick(SweetAlertDialog sweetAlertDialog) {
                     SPUtils.put(MainActivity.this, Constants.IS_FIRST_RUN, false);
+                    sweetAlertDialog.dismissWithAnimation();
                 }
             });
-            builder.show();
+            sweetAlertDialog.show();
         }
     }
 
 
     @Override
     protected void onResume() {
-        initDir();
         super.onResume();
+        initDir();
+        FlowerCollector.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        FlowerCollector.onPause(this);
     }
 
     private void checkUpdate() {
         if (!(boolean) SPUtils.get(Constants.MUSICUU_PREF, this, Constants.AUTO_CHECK, true)) {
             return;
         }
+        final IFlytekUpdate update = IFlytekUpdate.getInstance(this);
+        update.setParameter(UpdateConstants.EXTRA_NOTI_ICON, "true");
+        update.setParameter(UpdateConstants.EXTRA_STYLE, UpdateConstants.UPDATE_UI_DIALOG);
+        update.autoUpdate(this, new IFlytekUpdateListener() {
+            @Override
+            public void onResult(int errorcode, UpdateInfo result) {
 
+                if (errorcode == UpdateErrorCode.OK && result != null) {
+                    if (result.getUpdateType() == UpdateType.NoNeed) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "已经是最新版本！", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        return;
+                    }
+                    update.showUpdateInfo(MainActivity.this, result);
+                }
+            }
+        });
     }
 
 
@@ -208,12 +238,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                 } else if (type.equals(getString(R.string.mango))) {
                                     mistype = "mango";
                                 }
-
-
                                 Toast.makeText(MainActivity.this, "已切换成 " + item.getTitle(), Toast.LENGTH_SHORT).show();
                             }
-                        })
-                        .show();
+                        }).show();
                 break;
         }
     }

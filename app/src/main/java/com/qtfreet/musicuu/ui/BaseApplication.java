@@ -14,7 +14,6 @@ public class BaseApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
         File file = new File(Constants.lyricPath);
         if (!file.exists()) {
             file.mkdirs();

@@ -4,16 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.iflytek.sunflower.FlowerCollector;
 import com.mingle.widget.LoadingView;
 import com.qtfreet.musicuu.R;
 import com.qtfreet.musicuu.model.Bean.Mango.MangoBean;
@@ -51,6 +49,7 @@ public class SearchMangoActivity extends BaseActivity implements OnVideoClickLis
     @Override
     public void initView(Bundle savedInstanceState) {
         setContentView(R.layout.activity_search_mv);
+        setupWindowAnimations();
         ButterKnife.bind(this);
         setTitleName("搜索", true);
         mStaggeredGridLayoutManager = new StaggeredGridLayoutManager(2,
@@ -208,6 +207,18 @@ public class SearchMangoActivity extends BaseActivity implements OnVideoClickLis
             return false;
         }
     });
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        FlowerCollector.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        FlowerCollector.onPause(this);
+    }
 
     @Override
     public void click(View v, int postion) {

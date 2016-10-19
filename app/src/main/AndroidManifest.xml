@@ -1,27 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.qtfreet.musicuu">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- 获取网络状态 -->
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- 网络通信-->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />  <!-- 获取设备信息 -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> <!-- 获取MAC地址-->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- 读写sdcard，storage等等 -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" /> <!-- 允许程序录制音频 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
 
     <application
         android:name=".ui.BaseApplication"
         android:allowBackup="true"
         android:icon="@mipmap/icon"
-
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+
+        android:theme="@style/AppTheme"
+        tools:replace="android:icon">
+
+
+        <meta-data
+            android:name="IFLYTEK_APPKEY"
+            android:value="5802e49b" />
+        <meta-data
+            android:name="IFLYTEK_CHANNEL"
+            android:value="" />
+
+        <activity android:name="com.iflytek.autoupdate.IFlytekUpdateDialog" />
+        <service android:name="com.iflytek.autoupdate.IFlytekDownloadService" />
+
         <activity
             android:name=".ui.activity.MainActivity"
 
@@ -59,9 +75,6 @@
             android:label=""
             android:screenOrientation="portrait" />
 
-        <meta-data
-            android:name="PGYER_APPID"
-            android:value="0dc87c5a53d612aef8216b4617c91db0"></meta-data>
         <service
             android:name=".ui.service.DownloadService"
             android:exported="false" />
@@ -76,6 +89,8 @@
             android:exported="false"
 
             android:screenOrientation="portrait" />
+
+
     </application>
 
 </manifest>

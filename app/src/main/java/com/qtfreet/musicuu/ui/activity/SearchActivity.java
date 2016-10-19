@@ -1,18 +1,21 @@
 package com.qtfreet.musicuu.ui.activity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.annotation.Size;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.view.MenuItem;
+import android.text.Layout;
 import android.view.View;
-import android.widget.PopupMenu;
-import android.widget.TextView;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.iflytek.sunflower.FlowerCollector;
 import com.mingle.widget.LoadingView;
 import com.qtfreet.musicuu.R;
 import com.qtfreet.musicuu.model.ApiService;
@@ -23,12 +26,20 @@ import com.qtfreet.musicuu.ui.BaseActivity;
 import com.qtfreet.musicuu.ui.adapter.SongDetailAdapter;
 import com.qtfreet.musicuu.ui.service.DownloadService;
 import com.qtfreet.musicuu.utils.NetUtil;
+import com.yanzhenjie.recyclerview.swipe.Closeable;
+import com.yanzhenjie.recyclerview.swipe.OnSwipeMenuItemClickListener;
+import com.yanzhenjie.recyclerview.swipe.SwipeMenu;
+import com.yanzhenjie.recyclerview.swipe.SwipeMenuCreator;
+import com.yanzhenjie.recyclerview.swipe.SwipeMenuItem;
+import com.yanzhenjie.recyclerview.swipe.SwipeMenuLayout;
+import com.yanzhenjie.recyclerview.swipe.SwipeMenuRecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import cn.pedant.SweetAlert.SweetAlertDialog;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -36,12 +47,12 @@ import retrofit2.Response;
 /**
  * Created by qtfreet on 2016/3/20.
  */
-public class SearchActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener, OnMusicClickListener, PopupMenu.OnMenuItemClickListener {
+public class SearchActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener, OnMusicClickListener, OnSwipeMenuItemClickListener {
 
     private SongDetailAdapter searchResultAdapter;
 
     @Bind(R.id.lv_search_result)
-    RecyclerView search_list;
+    SwipeMenuRecyclerView search_list;
     private SwipeRefreshLayout refresh;
     private List<resultBean> result = new ArrayList<>();
     @Bind(R.id.loadView)
@@ -50,15 +61,42 @@ public class SearchActivity extends BaseActivity implements SwipeRefreshLayout.O
     @Override
     public void initView(Bundle savedInstanceState) {
         setContentView(R.layout.activity_search);
+        setupWindowAnimations();
         ButterKnife.bind(this);
         refresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         refresh.setOnRefreshListener(this);
         setTitleName("搜索", true);
         search_list.setLayoutManager(new LinearLayoutManager(this));
         search_list.setHasFixedSize(true);
+        //search_list.setItemViewSwipeEnabled(true);// 开启滑动删除。
+        search_list.setSwipeMenuCreator(swipeMenuCreator);
+        search_list.setSwipeMenuItemClickListener(this);
+
         initData();
     }
 
+    private SwipeMenuCreator swipeMenuCreator = new SwipeMenuCreator() {
+
+        @Override
+        public void onCreateMenu(SwipeMenu swipeLeftMenu, SwipeMenu swipeRightMenu, int viewType) {
+            int width = getResources().getDimensionPixelSize(R.dimen.item_width);
+            SwipeMenuItem downMuic = new SwipeMenuItem(SearchActivity.this)
+                    .setBackgroundDrawable(R.color.swipe_one)
+                    .setImage(R.drawable.new_download) // 图标。
+                    .setWidth(width) // 宽度。
+                    .setHeight(ViewGroup.LayoutParams.MATCH_PARENT); // 高度。
+            swipeRightMenu.addMenuItem(downMuic); // 添加一个按钮到左侧菜单。
+
+            SwipeMenuItem watchMV = new SwipeMenuItem(SearchActivity.this)
+                    .setBackgroundDrawable(R.color.swipe_two)
+                    .setImage(R.drawable.new_btn_mv) // 图标。
+                    .setWidth(width)
+                    .setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+            swipeRightMenu.addMenuItem(watchMV);// 添加一个按钮到右侧侧菜单。.
+
+            // 上面的菜单哪边不要菜单就不要添加。
+        }
+    };
 
     private void initData() {
         if (loadingView.getVisibility() == View.GONE) {
@@ -119,35 +157,75 @@ public class SearchActivity extends BaseActivity implements SwipeRefreshLayout.O
         }
     }
 
-    private int postion1;
-
-    public void popupMenuClick(View v, int postion) {
-        this.postion1 = postion;
-        PopupMenu popupMenu = new PopupMenu(this, v);
-        popupMenu.setOnMenuItemClickListener(this);
-        popupMenu.inflate(R.menu.main_popup_menu);
-        popupMenu.show();
-    }
-
-
     private void Download(int position) {
         final String SongName = result.get(position).getSongName();
         final String SongID = result.get(position).getSongId();
         final String Artist = result.get(position).getArtist();
-        String SqUrl = result.get(position).getSqUrl();
-        String HqUrl = result.get(position).getHqUrl();
-        String LqUrl = result.get(position).getLqUrl();
-        String MusicUrl = "";
-        if (!SqUrl.equals("")) {
-            MusicUrl = SqUrl;
-        } else if (!HqUrl.equals("")) {
-            MusicUrl = HqUrl;
-        } else if (!LqUrl.equals("")) {
-            MusicUrl = LqUrl;
+        final String SqUrl = result.get(position).getSqUrl();
+        final String HqUrl = result.get(position).getHqUrl();
+        final String LqUrl = result.get(position).getLqUrl();
+        final String flacUrl = result.get(position).getFlacUrl();
+        final String aacUrl = result.get(position).getAacUrl();
+
+        List<String> l = new ArrayList();
+
+        if (!LqUrl.isEmpty()) {
+            l.add("标准");
         }
-        download(SongName + "-" + Artist + "-L", MusicUrl, SongID);
+        if (!HqUrl.isEmpty()) {
+            l.add("高");
+        }
+        if (!SqUrl.isEmpty()) {
+            l.add("极高");
+        }
+        if (!flacUrl.isEmpty() || !aacUrl.isEmpty()) {
+            l.add("无损");
+        }
+        String[] urls = l.toArray(new String[l.size()]);
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+
+        dialog.setItems(urls, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                String name = SongName + "-" + Artist;
+                String url = "";
+                if (i == 0) {
+                    name += "-L";
+                    url = LqUrl;
+                } else if (i == 1) {
+                    name += "-H";
+                    url = HqUrl;
+                } else if (i == 2) {
+                    name += "-S";
+                    url = SqUrl;
+                } else if (i == 3) {
+                    name += "-F";
+                    if (flacUrl.isEmpty()) {
+                        url = aacUrl;
+                    } else {
+                        url = flacUrl;
+                    }
+
+                }
+
+                download(name, url, SongID);
+            }
+        });
+        dialog.show();
+
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        FlowerCollector.onResume(this);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        FlowerCollector.onPause(this);
+    }
 
     private static final int REQUEST_SUCCESS = 1;
     private static final int REQUEST_ERROR = 0;
@@ -155,6 +233,10 @@ public class SearchActivity extends BaseActivity implements SwipeRefreshLayout.O
     private void download(String name, String url, String id) {
         Intent i = new Intent(this, DownloadService.class);
         Bundle b = new Bundle();
+        if (url.isEmpty() || name.isEmpty() || id.isEmpty() || name == null || url == null || id == null) {
+            Toast.makeText(this, "获取下载链接失败，请重新尝试", Toast.LENGTH_SHORT).show();
+            return;
+        }
         b.putString(Constants.URL, url);
         b.putString(Constants.NAME, name);
         b.putString(Constants.SONG_ID, id);
@@ -194,27 +276,38 @@ public class SearchActivity extends BaseActivity implements SwipeRefreshLayout.O
         startActivity(i);
     }
 
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.download:
-                Download(postion1);
-                return true;
-            case R.id.mv:
-                String mvUrl = result.get(postion1).getMvUrl();
-                if (mvUrl.isEmpty()) {
-                    Toast.makeText(SearchActivity.this, "无MV信息", Toast.LENGTH_SHORT).show();
-                    return false;
-                }
-                String songName = result.get(postion1).getSongName() + "--" + result.get(postion1).getArtist();
-                Intent i = new Intent(SearchActivity.this, VideoActivity.class);
-                Bundle bundle = new Bundle();
-                bundle.putString(Constants.NAME, songName);
-                bundle.putString(Constants.URL, mvUrl);
-                i.putExtras(bundle);
-                startActivity(i);
-                return true;
+
+    public void downLoadMusic(int position) {
+        Download(position);
+    }
+
+
+    public void playMV(int position) {
+        String mvUrl = result.get(position).getMvUrl();
+        if (mvUrl.isEmpty()) {
+            Toast.makeText(SearchActivity.this, "无MV信息", Toast.LENGTH_SHORT).show();
+            return;
         }
-        return false;
+        String songName = result.get(position).getSongName() + "--" + result.get(position).getArtist();
+        Intent i = new Intent(SearchActivity.this, VideoActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(Constants.NAME, songName);
+        bundle.putString(Constants.URL, mvUrl);
+        i.putExtras(bundle);
+        startActivity(i);
+    }
+
+
+    @Override
+    public void onItemClick(Closeable closeable, int adapterPosition, int menuPosition, int direction) {
+        if (direction == SwipeMenuRecyclerView.RIGHT_DIRECTION) {
+            if (menuPosition == 0) {
+                downLoadMusic(adapterPosition);
+            } else if (menuPosition == 1) {
+                playMV(adapterPosition);
+            }
+            closeable.smoothCloseRightMenu();
+
+        }
     }
 }
