@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -141,7 +142,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 
     private void startSearchSong() {
         String text = mSearchEditText.getText().toString();
-        if (text.isEmpty()) {
+        if (TextUtils.isEmpty(text)) {
             Toast.makeText(MainActivity.this, R.string.no_music_name, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -149,10 +150,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         if (mistype.equals("yinyutai")) {
             bundle.putString(Constants.YinyueTai, text);
             startActivity(MainActivity.this, SearchMvActivity.class, bundle);
-
-        } else if (mistype.equals("mango")) {
-            bundle.putString(Constants.Mango, text);
-            startActivity(MainActivity.this, SearchMangoActivity.class, bundle);
 
         } else {
             bundle.putString(Constants.KEY, text);
@@ -211,7 +208,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             case R.id.fab:
                 new BottomDialog(MainActivity.this)
                         .title(getString(R.string.sel_music_type))             //设置标题
-
                         .inflateMenu(R.menu.music_type)         //传人菜单内容
                         .itemClick(new OnItemClickListener() {  //设置监听
                             @Override
@@ -235,8 +231,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                     mistype = "xm";
                                 } else if (type.equals(getString(R.string.mv_yinyuetai))) {
                                     mistype = "yinyutai";
-                                } else if (type.equals(getString(R.string.mango))) {
-                                    mistype = "mango";
                                 }
                                 Toast.makeText(MainActivity.this, "已切换成 " + item.getTitle(), Toast.LENGTH_SHORT).show();
                             }
