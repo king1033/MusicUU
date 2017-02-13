@@ -21,6 +21,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.iflytek.sunflower.FlowerCollector;
 import com.nineoldandroids.view.ViewHelper;
@@ -313,8 +314,8 @@ public class PlayMusicActivity extends BaseActivity implements View.OnClickListe
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         // Log.e("qtfreet00", "come in error");
-    //    Log.e("qtfreet0","the error is "+what);
-        if(what==-38){
+        //    Log.e("qtfreet0","the error is "+what);
+        if (what == -38) {
             isError = true;
             handler.sendEmptyMessage(MSG_LYRIC_SHOW);
             return true;
@@ -341,7 +342,6 @@ public class PlayMusicActivity extends BaseActivity implements View.OnClickListe
                     break;
                 case MSG_LYRIC_SHOW:
                     try {
-
                         String url = song_urls[position];
                         mediaPlayer = new MediaPlayer();
                         mediaPlayer.setOnPreparedListener(PlayMusicActivity.this);
@@ -355,12 +355,10 @@ public class PlayMusicActivity extends BaseActivity implements View.OnClickListe
                         } else {
                             mediaPlayer.prepareAsync();
                         }
-
                         setCurrentState(State.STATE_SETUP);
-//                        mediaPlayer.prepareAsync();
+                    } catch (Exception e) {
+                        Toast.makeText(PlayMusicActivity.this, "歌曲播放失败", Toast.LENGTH_SHORT).show();
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
                     break;
                 case MSG_LOADING:
@@ -431,6 +429,9 @@ public class PlayMusicActivity extends BaseActivity implements View.OnClickListe
     }
 
     private void downloadLyric(String url, String name) throws Exception {
+        if (url.isEmpty()) {
+            return;
+        }
         DownloadRequest request = NoHttp.createDownloadRequest(url, RequestMethod.GET, Constants.lyricPath, name, false, false);
         DownloadQueue downloadQueue = NoHttp.newDownloadQueue();
         downloadQueue.add(0, request, downloadListener);
